@@ -1,1 +1,463 @@
+//---------------------------------------------------------------------------
 
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit1.h"
+#include "Unit2.h"
+#include "Unit3.h"
+#include <IdHashSHA.hpp>
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button1Click(TObject *Sender)
+{
+	bool pronaden = false;
+
+	ADOTable1->First();
+
+	for(int i = 1; i <= ADOTable1->RecordCount; i++){
+		if(ADOTable1->FieldByName("KorisničkoIme")->AsString.LowerCase() == Edit1->Text.LowerCase() &&
+		   ADOTable1->FieldByName("Lozinka")->AsString == Edit2->Text){
+			pronaden = true;
+			Form2->Label1->Caption = "Dobrodošao " + Edit1->Text + "!";
+			Form2->Label2->Caption = "Posljednja prijava " + ADOTable1->FieldByName("ZadnjiPosjet")->AsDateTime;
+
+			ADOTable1->Edit();
+			ADOTable1->FieldByName("ZadnjiPosjet")->AsDateTime = Date();
+			ADOTable1->SaveToFile(ADOTable1->Name);
+
+			Form2->ShowModal();
+			Close();
+			}
+			 ADOTable1->Next();
+
+	}
+	if(!pronaden)
+		Application->MessageBoxW(L"Korisničko ime ili lozinka nisu točni!", L"Pogreška", MB_OK|MB_ICONERROR);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+	ADOTable1->First();
+
+	bool ne_postoji = true;
+
+	for(int i = 0; i <=ADOTable1->RecordCount; i++){
+		if(ADOTable1->FieldByName("KorisničkoIme")->AsString.LowerCase() == Edit1->Text.LowerCase()){
+			Application->MessageBoxW(L"Korisničko ime već postoji!", L"Pogreška", MB_OK|MB_ICONERROR);
+			ne_postoji = false;
+			break;
+		}
+		ADOTable1->Next();
+	}
+
+	if(ne_postoji){
+		ADOTable1->Append();
+		ADOTable1->FieldByName("KorisničkoIme")->AsString = Edit1->Text;
+		ADOTable1->FieldByName("Lozinka")->AsString = Edit2->Text;
+		ADOTable1->FieldByName("ZadnjiPosjet")->AsDateTime = Date();
+		ADOTable1->SaveToFile(ADOTable1->Name);
+	}
+}
+//---------------------------------------------------------------------------
+
+String __fastcall SHA1Encode(const String text)
+{
+	 String result;
+	 TIdHashSHA1 *idsha1= new TIdHashSHA1();
+	 try  {
+		result= idsha1->HashStringAsHex(text);
+	 }
+	 __finally    {
+		delete idsha1;
+	 }
+	 return result;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button3Click(TObject *Sender)
+{
+     Edit2->Text = SHA1Encode(Edit2->Text);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button4Click(TObject *Sender)
+{
+    Form3->ShowModal();
+}
+//---------------------------------------------------------------------------
+
+
+POSTAVKE
+
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit3.h"
+#include "reinit.hpp"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm3 *Form3;
+//---------------------------------------------------------------------------
+__fastcall TForm3::TForm3(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm3::Button1Click(TObject *Sender)
+{
+     const CROATIAN = (SUBLANG_CROATIAN_CROATIA << 10) | LANG_CROATIAN;
+	if(LoadNewResourceModule(CROATIAN))
+		ReinitializeForms();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm3::Button2Click(TObject *Sender)
+{
+    const ENGLISH = (SUBLANG_ENGLISH_US << 10) | LANG_ENGLISH;
+	if(LoadNewResourceModule(ENGLISH))
+		ReinitializeForms();
+}
+//---------------------------------------------------------------------------
+
+
+GLAVNO
+
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit2.h"
+#include "Unit4.h"
+#include "Računala.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm2 *Form2;
+//---------------------------------------------------------------------------
+__fastcall TForm2::TForm2(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+
+
+ void __fastcall TForm2::Button1Click(TObject *Sender)
+{
+	 _di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+
+	ListView1->Items->Clear();
+
+	for(int i = 0; i < Skladište->Count; i++){
+		ListView1->Items->Add();
+		ListView1->Items->Item[i]->Caption = Skladište->Računalo[i]->Naziv;
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Vrsta);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->KoličinaRačunala);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Cijena);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Jamstvo);
+	}
+	RadioButton1->Checked = false;
+	RadioButton2->Checked = false;
+	CheckBox1->Checked = false;
+	CheckBox2->Checked = false;
+	CheckBox3->Checked = false;
+	LabeledEdit1->Text = EmptyStr;
+	LabeledEdit3->Text = EmptyStr;
+	LabeledEdit4->Text = EmptyStr;
+	LabeledEdit5->Text = EmptyStr;
+	LabeledEdit6->Text = EmptyStr;
+	LabeledEdit7->Text = EmptyStr;
+	LabeledEdit8->Text = EmptyStr;
+	LabeledEdit9->Text = EmptyStr;
+	LabeledEdit10->Text = EmptyStr;
+	LabeledEdit11->Text = EmptyStr;
+	LabeledEdit12->Text = EmptyStr;
+	LabeledEdit13->Text = EmptyStr;
+	LabeledEdit14->Text = EmptyStr;
+	LabeledEdit15->Text = EmptyStr;
+	LabeledEdit16->Text = EmptyStr;
+	LabeledEdit17->Text = EmptyStr;
+	LabeledEdit18->Text = EmptyStr;
+	LabeledEdit19->Text = EmptyStr;
+	RichEdit1->Text = EmptyStr;
+
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm2::ListView1Click(TObject *Sender)
+{
+	 if(ListView1->ItemIndex < 0) return;
+	_di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+	_di_IXMLRačunaloType Računalo = Skladište->Računalo[ListView1->ItemIndex];
+
+	LabeledEdit1->Text = Računalo->Naziv;
+	if(Računalo->Vrsta == "Prijenosno računalo")
+		 RadioButton2->Checked = true;
+	if(Računalo->Vrsta == "Stolno računalo")
+		RadioButton1->Checked = true;
+	LabeledEdit3->Text = Računalo->Matična;
+	LabeledEdit4->Text = Računalo->Procesor;
+	LabeledEdit5->Text = Računalo->Memorija;
+	LabeledEdit6->Text = Računalo->Grafička;
+	LabeledEdit7->Text = Računalo->HDD;
+	LabeledEdit8->Text = Računalo->SSD;
+	LabeledEdit9->Text = Računalo->OptičkiUređaj;
+	LabeledEdit10->Text = Računalo->Zvuk;
+	LabeledEdit11->Text = Računalo->Kučište;
+	LabeledEdit12->Text = Računalo->Napajanje;
+	LabeledEdit13->Text = Računalo->MrežnaKartica;
+	LabeledEdit14->Text = Računalo->USB;
+	LabeledEdit15->Text = Računalo->OS;
+	LabeledEdit16->Text = Računalo->KoličinaRačunala;
+	LabeledEdit17->Text = Računalo->Jamstvo;
+	LabeledEdit18->Text = Računalo->Cijena;
+	LabeledEdit19->Text = Računalo->Baterija;
+	RichEdit1->Text = Računalo->Napomena;
+	if(Računalo->DSub == "da")
+		CheckBox1->Checked = true;
+	if(Računalo->DVID == "da")
+		CheckBox2->Checked = true;
+	if(Računalo->HDMI == "da")
+		CheckBox3->Checked = true;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::Button2Click(TObject *Sender)
+{
+    _di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+	_di_IXMLRačunaloType Računalo = Skladište->Add();
+
+	Računalo->Naziv = "Novo računalo";
+	Računalo->Vrsta = EmptyStr;
+	Računalo->Matična = EmptyStr;
+	Računalo->Procesor = EmptyStr;
+	Računalo->Memorija = EmptyStr;
+	Računalo->Grafička = EmptyStr;
+	Računalo->HDD = EmptyStr;
+	Računalo->SSD = EmptyStr;
+	Računalo->OptičkiUređaj = EmptyStr;
+	Računalo->Zvuk = EmptyStr;
+	Računalo->Kučište = EmptyStr;
+	Računalo->Napajanje = EmptyStr;
+	Računalo->MrežnaKartica = EmptyStr;
+	Računalo->USB = EmptyStr;
+	Računalo->OS = EmptyStr;
+	Računalo->KoličinaRačunala = EmptyStr;
+	Računalo->Jamstvo = EmptyStr;
+	Računalo->Cijena = EmptyStr;
+	Računalo->Baterija = EmptyStr;
+	Računalo->Napomena = EmptyStr;
+	Računalo->DSub = EmptyStr;
+	Računalo->DVID = EmptyStr;
+	Računalo->HDMI = EmptyStr;
+
+	XMLDocument1->SaveToFile(XMLDocument1->FileName);
+}
+//---------------------------------------------------------------------------
+
+
+
+void __fastcall TForm2::Button4Click(TObject *Sender)
+{
+	if(ListView1->ItemIndex < 0){
+		Application->MessageBoxW(L"Odaberite računalo koje se nalazi na listi!", L"Upozorenje", MB_OK|MB_ICONWARNING);
+		return;
+	}
+
+	_di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+	_di_IXMLRačunaloType Računalo = Skladište->Računalo[ListView1->ItemIndex];
+
+	Računalo->Naziv = LabeledEdit1->Text;
+	if(RadioButton2->Checked == true)
+		Računalo->Vrsta = "Prijenosno računalo";
+	if(RadioButton1->Checked == true)
+		Računalo->Vrsta = "Stolno računalo";
+	Računalo->Matična = LabeledEdit3->Text;
+	Računalo->Procesor = LabeledEdit4->Text;
+	Računalo->Memorija = LabeledEdit5->Text;
+	Računalo->Grafička = LabeledEdit6->Text;
+	Računalo->HDD = LabeledEdit7->Text;
+	Računalo->SSD = LabeledEdit8->Text;
+	Računalo->OptičkiUređaj = LabeledEdit9->Text;
+	Računalo->Zvuk = LabeledEdit10->Text;
+	Računalo->Kučište = LabeledEdit11->Text;
+	Računalo->Napajanje = LabeledEdit12->Text;
+	Računalo->MrežnaKartica = LabeledEdit13->Text;
+	Računalo->USB = LabeledEdit14->Text;
+	Računalo->OS = LabeledEdit15->Text;
+	Računalo->KoličinaRačunala = LabeledEdit16->Text;
+	Računalo->Jamstvo = LabeledEdit17->Text;
+	Računalo->Cijena = LabeledEdit18->Text;
+	Računalo->Baterija = LabeledEdit19->Text;
+	Računalo->Napomena = RichEdit1->Text;
+	if(CheckBox1->Checked == true)
+		Računalo->DSub = "da";
+	if(CheckBox2->Checked == true)
+		Računalo->DVID = "da";
+	if(CheckBox3->Checked == true)
+		Računalo->HDMI = "da";
+
+	XMLDocument1->SaveToFile(XMLDocument1->FileName);
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm2::Button3Click(TObject *Sender)
+{
+	if(ListView1->ItemIndex < 0){
+		Application->MessageBoxW(L"Odaberite računalo koje se nalazi na listi!", L"Upozorenje", MB_OK|MB_ICONWARNING);
+		return;
+	}
+	_di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+    Skladište->Delete(ListView1->ItemIndex);
+	XMLDocument1->SaveToFile(XMLDocument1->FileName);
+
+	ADOTable1->Append();
+	ADOTable1->FieldByName("Naziv")->AsString = LabeledEdit1->Text;
+	if(RadioButton2->Checked == true)
+		ADOTable1->FieldByName("Vrsta")->AsString = "Prijenosno računalo";
+	if(RadioButton1->Checked == true)
+		ADOTable1->FieldByName("Vrsta")->AsString = "Stolno računalo";
+	ADOTable1->FieldByName("Matična")->AsString = LabeledEdit3->Text;
+	ADOTable1->FieldByName("Procesor")->AsString = LabeledEdit4->Text;
+	ADOTable1->FieldByName("Memorija")->AsString = LabeledEdit5->Text;
+	ADOTable1->FieldByName("Grafička")->AsString = LabeledEdit6->Text;
+	ADOTable1->FieldByName("HDD")->AsString = LabeledEdit7->Text;
+	ADOTable1->FieldByName("SSD")->AsString = LabeledEdit8->Text;
+	ADOTable1->FieldByName("OptičkiUređaj")->AsString = LabeledEdit9->Text;
+	ADOTable1->FieldByName("Zvuk")->AsString = LabeledEdit10->Text;
+	ADOTable1->FieldByName("Kučište")->AsString = LabeledEdit11->Text;
+	ADOTable1->FieldByName("Napajanje")->AsString = LabeledEdit12->Text;
+	ADOTable1->FieldByName("Baterija")->AsString = LabeledEdit19->Text;
+	ADOTable1->FieldByName("MrežnaKartica")->AsString = LabeledEdit13->Text;
+	ADOTable1->FieldByName("USB")->AsString = LabeledEdit14->Text;
+    if(CheckBox1->Checked == true)
+		ADOTable1->FieldByName("D-Sub")->AsString = "da";
+	if(CheckBox2->Checked == true)
+		ADOTable1->FieldByName("DVI-D")->AsString = "da";
+	if(CheckBox3->Checked == true)
+		ADOTable1->FieldByName("HDMI")->AsString = "da";
+	ADOTable1->FieldByName("OS")->AsString = LabeledEdit15->Text;
+	ADOTable1->FieldByName("KoličinaRačunala")->AsString = LabeledEdit16->Text;
+	ADOTable1->FieldByName("Jamstvo")->AsString = LabeledEdit17->Text;
+	ADOTable1->FieldByName("Cijena")->AsString = LabeledEdit18->Text;
+	ADOTable1->FieldByName("Napomena")->AsString = RichEdit1->Text;
+	ADOTable1->SaveToFile(ADOTable1->Name);
+
+    ListView1->Items->Clear();
+
+	for(int i = 0; i < Skladište->Count; i++){
+		ListView1->Items->Add();
+		ListView1->Items->Item[i]->Caption = Skladište->Računalo[i]->Naziv;
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Vrsta);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->KoličinaRačunala);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Cijena);
+		ListView1->Items->Item[i]->SubItems->Add(Skladište->Računalo[i]->Jamstvo);
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::Button5Click(TObject *Sender)
+{
+	_di_IXMLSkladišteType Skladište = GetSkladište(XMLDocument1);
+
+	bool pronaden = false;
+
+	for(int i = 0; i < Skladište->Count; i++){
+		if(Skladište->Računalo[i]->Naziv == LabeledEdit2->Text){
+			Application->MessageBoxW(L"Pronađeno!", L"Traži", MB_OK|MB_ICONINFORMATION);
+			pronaden = true;
+			//Pokaži gdje se nalazi u listi
+		}
+	}
+
+	if(!pronaden)
+        Application->MessageBoxW(L"Nije pronađeno!", L"Traži", MB_OK|MB_ICONINFORMATION);
+
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::Button6Click(TObject *Sender)
+{
+	Client->Host = Edit1->Text;
+	Client->Connect();
+
+	Client->Socket->Write(Edit2->Text.Length());
+	Client->Socket->Write(Edit2->Text);
+    Client->Disconnect();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::ServerExecute(TIdContext *AContext)
+{
+	int duljina = AContext->Connection->Socket->ReadLongInt();
+	UnicodeString Poruka = AContext->Connection->Socket->ReadString(duljina);
+	AContext->Connection->Disconnect();
+
+    ListBox1->Items->Add(Edit3->Text + ": " + Poruka);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::Button7Click(TObject *Sender)
+{
+	Form4->ShowModal();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::RadioButton2Click(TObject *Sender)
+{
+	if(RadioButton2->Checked == true){
+		LabeledEdit11->Enabled = false;
+		LabeledEdit19->Enabled = true;
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm2::RadioButton1Click(TObject *Sender)
+{
+	if(RadioButton1->Checked == true){
+		LabeledEdit19->Enabled = false;
+		LabeledEdit11->Enabled = true;
+	}
+}
+//---------------------------------------------------------------------------
+
+
+UKLONJENA
+
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit4.h"
+#include "Računala.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm4 *Form4;
+//---------------------------------------------------------------------------
+__fastcall TForm4::TForm4(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm4::Button1Click(TObject *Sender)
+{
+	ADOTable1->Delete();
+}
+//---------------------------------------------------------------------------
